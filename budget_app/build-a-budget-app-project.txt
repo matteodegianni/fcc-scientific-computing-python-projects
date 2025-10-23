@@ -1,0 +1,120 @@
+** start of main.py **
+
+class Category:
+    def __init__(self, name):
+        self.name = name
+        self.ledger = []
+
+    def deposit(self, amount, description=""):
+        """Aggiunge un deposito alla categoria."""
+        self.ledger.append({"amount": amount, "description": description})
+
+    def withdraw(self, amount, description=""):
+        """Registra un prelievo se ci sono fondi sufficienti."""
+        if self.check_funds(amount):
+            self.ledger.append({"amount": -amount, "description": description})
+            return True
+        return False
+
+    def get_balance(self):
+        """Calcola il saldo corrente."""
+        total = 0
+        for item in self.ledger:
+            total += item["amount"]
+        return total
+
+    def transfer(self, amount, category):
+        """Trasferisce fondi da una categoria all’altra."""
+        if self.check_funds(amount):
+            self.withdraw(amount, f"Transfer to {category.name}")
+            category.deposit(amount, f"Transfer from {self.name}")
+            return True
+        return False
+
+    def check_funds(self, amount):
+        """Controlla se ci sono fondi sufficienti."""
+        if amount > self.get_balance():
+            return False
+        return True
+
+    def __str__(self):
+        """Stampa la categoria in formato leggibile."""
+        title = f"{self.name:*^30}\n"
+        items = ""
+        total = 0
+        for item in self.ledger:
+            desc = item["description"][:23]
+            amt = f"{item['amount']:.2f}"
+            items += f"{desc:<23}{amt:>7}\n"
+            total += item["amount"]
+        output = title + items + f"Total: {total:.2f}"
+        return output
+
+
+def create_spend_chart(categories):
+    """Crea il grafico a barre delle spese per categoria."""
+    spent_amounts = []
+    category_names = []
+
+    for category in categories:
+        total_spent = 0
+        for item in category.ledger:
+            if item["amount"] < 0:
+                total_spent += abs(item["amount"])
+        spent_amounts.append(total_spent)
+        category_names.append(category.name)
+
+    total_spent_sum = sum(spent_amounts)
+    spent_percentages = [(amount / total_spent_sum) * 100 for amount in spent_amounts]
+
+    # Inizia a costruire il grafico
+    chart = "Percentage spent by category\n"
+
+    for i in range(100, -1, -10):
+        chart += str(i).rjust(3) + "|"
+        for percent in spent_percentages:
+            if percent >= i:
+                chart += " o "
+            else:
+                chart += "   "
+        chart += " \n"
+
+    chart += "    " + "-" * (len(categories) * 3 + 1) + "\n"
+
+    max_len = max(len(name) for name in category_names)
+    for i in range(max_len):
+        chart += "     "
+        for name in category_names:
+            if i < len(name):
+                chart += name[i] + "  "
+            else:
+                chart += "   "
+        if i != max_len - 1:
+            chart += "\n"
+
+    return chart
+
+
+# --- ESEMPIO DI TEST ---
+food = Category("Food")
+entertainment = Category("Entertainment")
+business = Category("Business")
+
+food.deposit(900, "deposit")
+food.withdraw(105.55, "groceries")
+food.withdraw(33.40, "restaurant and more food")
+food.transfer(50, entertainment)
+
+entertainment.withdraw(15.00, "movie night")
+business.deposit(500, "initial deposit")
+business.withdraw(120, "supplies")
+
+print(food)
+print(entertainment)
+print(business)
+
+print(create_spend_chart([business, food, entertainment]))
+
+
+** end of main.py **
+
